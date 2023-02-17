@@ -75,7 +75,7 @@ function removeItem(e) {
 }
 
 function clearItems(e) {
-  // clear ul
+  // clear itemList
   itemList.innerHTML = '';
 }
 
