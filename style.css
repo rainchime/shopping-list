@@ -28,6 +28,10 @@ header h1 {
   margin-left: 10px;
 }
 
+.edit-mode {
+  color: #7e53ea;
+}
+
 .container {
   max-width: 500px;
   margin: 30px auto;

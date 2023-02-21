@@ -12,10 +12,12 @@ Shopping List Project Specs
 */
 
 const itemForm = document.querySelector('#item-form');
+const formBtn = itemForm.querySelector('button');
 const itemInput = document.querySelector('#item-input');
 const itemFilter = document.querySelector('#filter');
 const itemList = document.querySelector('#item-list');
 const clearBtn = document.querySelector('#clear');
+let isEditMode = false;
 
 function onAddItemSubmit(e) {
   e.preventDefault();
@@ -27,6 +29,18 @@ function onAddItemSubmit(e) {
     alert('Please enter an item');
     return;
   }
+
+  // check for edit mode
+  if (isEditMode) {
+    const itemToEdit = itemList.querySelector('.edit-mode');
+    // remove edit list item from localStorage
+    removeFromStorage(itemToEdit.textContent);
+    // remove edit list item from DOM
+    itemToEdit.remove();
+    // set edit mode to false
+    isEditMode = false;
+  }
+
   addItemToDOM(newItem);
   addItemToStorage(newItem);
 
@@ -41,7 +55,6 @@ function getItemFromStorage() {
 
 function addItemToStorage(item) {
   let itemFromStorage = getItemFromStorage();
-  console.log(itemFromStorage);
   if (itemFromStorage.length === 0) {
     itemFromStorage = [];
   }
@@ -78,17 +91,33 @@ function createIcon(classes) {
 
 function onClickItem(e) {
   if (e.target.parentElement.classList.contains('remove-item')) {
-    if (confirm('Are you sure?')) {
-      removeFromDOM(e.target.parentElement.parentElement);
-      removeFromStorage(e.target.parentElement.parentElement.textContent);
-
-      checkUI();
-    }
+    removeFromDOM(e.target.parentElement.parentElement);
+    removeFromStorage(e.target.parentElement.parentElement.textContent);
+  } else {
+    setItemToEdit(e.target);
   }
+  checkUI();
+}
+
+function setItemToEdit(item) {
+  isEditMode = true;
+
+  itemList
+    .querySelectorAll('li')
+    .forEach((list) => list.classList.remove('edit-mode'));
+
+  item.classList.add('edit-mode');
+  // change form button to update
+  formBtn.innerHTML = '<i class ="fa-solid fa-pen"></i> Update Item';
+  // hue, saturation, lightness
+  formBtn.style.backgroundColor = 'hsl(220, 50%, 50%)';
+  itemInput.value = item.textContent;
 }
 
 function removeFromDOM(e) {
-  e.remove();
+  if (confirm('Are you sure?')) {
+    e.remove();
+  }
 }
 
 function removeFromStorage(item) {
