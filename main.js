@@ -39,6 +39,11 @@ function onAddItemSubmit(e) {
     itemToEdit.remove();
     // set edit mode to false
     isEditMode = false;
+  } else {
+    if (checkIfItemExists(newItem)) {
+      alert('This item already exists.');
+      return;
+    }
   }
 
   addItemToDOM(newItem);
@@ -49,15 +54,13 @@ function onAddItemSubmit(e) {
 }
 
 function getItemFromStorage() {
-  const itemFromStorage = JSON.parse(localStorage.getItem('items'));
+  // use nullish coalescing operator to create an empty array if the itemms key does not exist in localStorage
+  const itemFromStorage = JSON.parse(localStorage.getItem('items') ?? '[]');
   return itemFromStorage;
 }
 
 function addItemToStorage(item) {
   let itemFromStorage = getItemFromStorage();
-  if (itemFromStorage.length === 0) {
-    itemFromStorage = [];
-  }
   // update items array with the new item
   itemFromStorage.push(item);
   // store updated array in localStorage
@@ -93,19 +96,22 @@ function onClickItem(e) {
   if (e.target.parentElement.classList.contains('remove-item')) {
     removeFromDOM(e.target.parentElement.parentElement);
     removeFromStorage(e.target.parentElement.parentElement.textContent);
-  } else {
+    checkUI();
+  } else if (e.target.tagName === 'LI') {
     setItemToEdit(e.target);
   }
-  checkUI();
+}
+
+function checkIfItemExists(item) {
+  const itemsFromStorage = getItemFromStorage();
+  return itemsFromStorage.includes(item);
 }
 
 function setItemToEdit(item) {
   isEditMode = true;
-
   itemList
     .querySelectorAll('li')
     .forEach((list) => list.classList.remove('edit-mode'));
-
   item.classList.add('edit-mode');
   // change form button to update
   formBtn.innerHTML = '<i class ="fa-solid fa-pen"></i> Update Item';
@@ -157,6 +163,8 @@ function displayUI() {
 }
 
 function checkUI() {
+  itemInput.value = '';
+
   const items = document.querySelectorAll('li');
 
   if (items.length === 0) {
@@ -166,6 +174,11 @@ function checkUI() {
     itemFilter.style.display = 'flex';
     clearBtn.style.display = 'flex';
   }
+
+  formBtn.innerHTML = '<i class ="fa-solid fa-plus"></i> Add Item';
+  formBtn.style = '';
+
+  isEditMode = false;
 }
 
 function init() {
