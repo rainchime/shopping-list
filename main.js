@@ -11,37 +11,58 @@ Shopping List Project Specs
 8. Deploy to Netlify
 */
 
-const form = document.querySelector('#item-form');
-const formInput = document.querySelector('#item-input');
-const itemList = document.getElementById('item-list');
+const itemForm = document.querySelector('#item-form');
+const itemInput = document.querySelector('#item-input');
+const itemFilter = document.querySelector('#filter');
+const itemList = document.querySelector('#item-list');
 const clearBtn = document.querySelector('#clear');
-const filterItem = document.getElementById('filter');
 
-function addItem(e) {
+function onAddItemSubmit(e) {
   e.preventDefault();
 
-  const formText = formInput.value;
+  const newItem = itemInput.value;
 
   // validate input
-  if (formText === '') {
-    confirm('Please enter an item');
+  if (newItem === '') {
+    alert('Please enter an item');
     return;
   }
-  // create list item
-  const li = document.createElement('li');
-  // add classes to li
-  li.appendChild(document.createTextNode(formText));
+  addItemToDOM(newItem);
+  addItemToStorage(newItem);
 
-  const btn = createBtn('remove-item btn-link text red');
-  li.appendChild(btn);
-
-  itemList.appendChild(li);
-
-  resetUI();
-  formInput.value = '';
+  checkUI();
+  itemInput.value = '';
 }
 
-function createBtn(classes) {
+function getItemFromStorage() {
+  const itemFromStorage = JSON.parse(localStorage.getItem('items'));
+  return itemFromStorage;
+}
+
+function addItemToStorage(item) {
+  let itemFromStorage = getItemFromStorage();
+  console.log(itemFromStorage);
+  if (itemFromStorage.length === 0) {
+    itemFromStorage = [];
+  }
+  // update items array with the new item
+  itemFromStorage.push(item);
+  // store updated array in localStorage
+  localStorage.setItem('items', JSON.stringify(itemFromStorage));
+}
+
+function addItemToDOM(item) {
+  // create new li
+  const li = document.createElement('li');
+  li.appendChild(document.createTextNode(item));
+
+  const btn = createButton('remove-item btn-link text-red');
+
+  li.appendChild(btn);
+  itemList.appendChild(li);
+}
+
+function createButton(classes) {
   const btn = document.createElement('button');
   btn.className = classes;
   const icon = createIcon('fa-solid fa-xmark');
@@ -55,36 +76,76 @@ function createIcon(classes) {
   return icon;
 }
 
-function removeItem(e) {
+function onClickItem(e) {
   if (e.target.parentElement.classList.contains('remove-item')) {
     if (confirm('Are you sure?')) {
-      e.target.parentElement.parentElement.remove();
+      removeFromDOM(e.target.parentElement.parentElement);
+      removeFromStorage(e.target.parentElement.parentElement.textContent);
+
+      checkUI();
     }
-    resetUI();
   }
 }
 
-function clearItems() {
-  //   itemList.remove();
+function removeFromDOM(e) {
+  e.remove();
+}
+
+function removeFromStorage(item) {
+  let itemFromStorage = getItemFromStorage();
+  // check each element in the localStorage Array against the removed item
+  itemFromStorage = itemFromStorage.filter((e) => e != item);
+  // store updated array in localStorage
+  localStorage.setItem('items', JSON.stringify(itemFromStorage));
+}
+
+function filterItem() {
+  const filterText = itemFilter.value.toLowerCase();
+  const items = document.querySelectorAll('li');
+  items.forEach((item) => {
+    const name = item.textContent;
+    if (name.includes(filterText)) {
+      item.style.display = 'flex';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+}
+
+function clearItem() {
   while (itemList.firstChild) {
-    itemList.removeChild(itemList.firstChild);
+    itemList.firstChild.remove();
   }
-  resetUI();
+  // clear from localStorage
+  localStorage.removeItem('items');
+  checkUI();
 }
 
-function resetUI() {
-  const items = itemList.querySelectorAll('li');
+function displayUI() {
+  const itemFromStorage = getItemFromStorage();
+  itemFromStorage.forEach((item) => addItemToDOM(item));
+  checkUI();
+}
+
+function checkUI() {
+  const items = document.querySelectorAll('li');
+
   if (items.length === 0) {
-    filterItem.style.display = 'none';
+    itemFilter.style.display = 'none';
     clearBtn.style.display = 'none';
   } else {
-    filterItem.style.display = 'flex';
+    itemFilter.style.display = 'flex';
     clearBtn.style.display = 'flex';
   }
 }
 
-form.addEventListener('submit', addItem);
-itemList.addEventListener('click', removeItem);
-clearBtn.addEventListener('click', clearItems);
+function init() {
+  itemForm.addEventListener('submit', onAddItemSubmit);
+  itemList.addEventListener('click', onClickItem);
+  clearBtn.addEventListener('click', clearItem);
+  itemFilter.addEventListener('keyup', filterItem);
+  document.addEventListener('DOMContentLoaded', displayUI);
+  checkUI();
+}
 
-resetUI();
+init();
